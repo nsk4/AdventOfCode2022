@@ -20,7 +20,6 @@ namespace Day4
                     numberOfCompleteOverlappingPairs++;
                 }
 
-
                 // Calculate number of overlapping pairs
                 if (ranges[0] >= ranges[2] && ranges[0] <= ranges[3] || // Elf 1 start overlap
                     ranges[1] >= ranges[2] && ranges[1] <= ranges[3] || // Elf 1 end overlap
@@ -29,11 +28,6 @@ namespace Day4
                 {
                     numberOfPartialOverlappingPairs++;
                 }
-
-
-                // numberOfOverlappingSections
-
-
             }
 
             Console.WriteLine("Number of complete pairs: " + numberOfCompleteOverlappingPairs);
