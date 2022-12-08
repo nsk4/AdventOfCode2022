@@ -17,7 +17,6 @@ namespace Day8
                 }
             }
 
-
             #region Part 1 - Number of visible trees
             int[,] visibleGrid = new int[lines.Length, lines[0].Length];
 
