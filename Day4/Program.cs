@@ -33,7 +33,6 @@ namespace Day4
             Console.WriteLine("Number of complete pairs: " + numberOfCompleteOverlappingPairs);
             Console.WriteLine("Number of partial pairs: " + numberOfPartialOverlappingPairs);
 
-
             Console.ReadLine();
         }
     }
