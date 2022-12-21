@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Day14
 {
@@ -17,17 +14,34 @@ namespace Day14
             Sand
         }
 
-        static int GetSandAmount(Dictionary<(int, int), SpotType> spots, (int, int) startPoint, int lowestPoint)
+        static int GetSandAmount(Dictionary<(int, int), SpotType> spots, (int, int) startPoint, int lowestPoint, bool useFloor)
         {
             int sandAmmount = 0;
-            bool freefallReached = false;
+            bool limitReached = false;
             (int, int) currentPosition = startPoint;
-            while (!freefallReached)
+            while (!limitReached)
             {
-                if (currentPosition.Item2 == lowestPoint)
+                if (!useFloor && currentPosition.Item2 == lowestPoint)
                 {
                     // Sand can only freefall from now
-                    freefallReached = true;
+                    limitReached = true;
+
+                }
+                else if (useFloor && currentPosition.Item2 + 1 == lowestPoint)
+                {
+                    // Next position is the cave floor
+                    if (spots.ContainsKey((currentPosition.Item1, currentPosition.Item2)))
+                    {
+                        // Current spot is already taken.
+                        limitReached = true;
+                    }
+                    else
+                    {
+                        // Current spot is the final rest point of the sand.
+                        spots.Add((currentPosition.Item1, currentPosition.Item2), SpotType.Sand);
+                        sandAmmount++;
+                        currentPosition = startPoint;
+                    }
                 }
                 else if (!spots.ContainsKey((currentPosition.Item1, currentPosition.Item2 + 1)))
                 {
@@ -46,8 +60,12 @@ namespace Day14
                 }
                 else if (spots.ContainsKey((currentPosition.Item1, currentPosition.Item2)))
                 {
-                    // Cannot move sand at all
-                    freefallReached = true;
+                    // Sand cannot move anywhere, including its current position
+                    if (spots[currentPosition].Equals(SpotType.Start))
+                    {
+                        sandAmmount++;
+                    }
+                    limitReached = true;
                 }
                 else
                 {
@@ -65,26 +83,29 @@ namespace Day14
         {
             (int, int) startPoint = (500, 0);
 
-            Dictionary<(int, int), SpotType> spots = new Dictionary<(int, int), SpotType>();
-            spots.Add(startPoint, SpotType.Start);
+            Dictionary<(int, int), SpotType> freefallSpots = new Dictionary<(int, int), SpotType>();
+            Dictionary<(int, int), SpotType> floorSpots = new Dictionary<(int, int), SpotType>();
+            freefallSpots.Add(startPoint, SpotType.Start);
+            floorSpots.Add(startPoint, SpotType.Start);
             int lowestPoint = 0;
 
             foreach (string line in System.IO.File.ReadLines("input.txt"))
             {
-                string[] pointStrings = line.Split(new string[] {" -> "}, StringSplitOptions.None);
+                string[] pointStrings = line.Split(new string[] { " -> " }, StringSplitOptions.None);
                 int[] oldPoint = pointStrings[0].Split(',').Select(x => int.Parse(x)).ToArray();
                 lowestPoint = Math.Max(lowestPoint, oldPoint[1]);
-                for (int i=1; i< pointStrings.Length; i++)
+                for (int i = 1; i < pointStrings.Length; i++)
                 {
                     int[] newPoint = pointStrings[i].Split(',').Select(x => int.Parse(x)).ToArray();
                     if (oldPoint[1] == newPoint[1])
                     {
                         // Horizontal movement
-                        for(int x = Math.Min(oldPoint[0], newPoint[0]); x <= Math.Max(oldPoint[0], newPoint[0]); x++)
+                        for (int x = Math.Min(oldPoint[0], newPoint[0]); x <= Math.Max(oldPoint[0], newPoint[0]); x++)
                         {
-                            if(!spots.ContainsKey((x, oldPoint[1])))
+                            if (!freefallSpots.ContainsKey((x, oldPoint[1])))
                             {
-                                spots.Add((x, oldPoint[1]), SpotType.Rock);
+                                freefallSpots.Add((x, oldPoint[1]), SpotType.Rock);
+                                floorSpots.Add((x, oldPoint[1]), SpotType.Rock);
                             }
                         }
                     }
@@ -93,9 +114,10 @@ namespace Day14
                         // Vertical movement
                         for (int y = Math.Min(oldPoint[1], newPoint[1]); y <= Math.Max(oldPoint[1], newPoint[1]); y++)
                         {
-                            if (!spots.ContainsKey((oldPoint[0], y)))
+                            if (!freefallSpots.ContainsKey((oldPoint[0], y)))
                             {
-                                spots.Add((oldPoint[0], y), SpotType.Rock);
+                                freefallSpots.Add((oldPoint[0], y), SpotType.Rock);
+                                floorSpots.Add((oldPoint[0], y), SpotType.Rock);
                             }
                         }
 
@@ -111,9 +133,8 @@ namespace Day14
                 }
             }
 
-            Console.WriteLine("Amount of sand: " + GetSandAmount(spots, startPoint, lowestPoint));
-
-            spots.Aggregate(spot => spot.Value == SpotType.Sand);
+            Console.WriteLine("Freefall sand: " + GetSandAmount(freefallSpots, startPoint, lowestPoint, false));
+            Console.WriteLine("Floor sand: " + GetSandAmount(floorSpots, startPoint, lowestPoint + 2, true));
 
             Console.ReadKey();
         }
